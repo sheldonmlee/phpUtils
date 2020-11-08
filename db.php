@@ -14,10 +14,6 @@ function getConnection($details) {
 	$fields = array($hostname, $dbname, $username, $password);
 	foreach ($fields as $field) { if (empty($field)) return null; }
 
-	echo"<p>";
-	print_r($fields);
-	echo"</p>";
-
 	try {
 		$connection = new PDO("mysql:host=$hostname;dbname=$dbname", "$username", "$password");
 		return $connection;
