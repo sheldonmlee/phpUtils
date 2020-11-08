@@ -1,1 +1,1 @@
-# A PHP Utility library for personal use.
+# PHP utililies for personal use.
