@@ -34,8 +34,8 @@ const INPUT_WEEK = 22;
 function generateInput($type)
 {
 	switch ($type) { 
-	case FORM_NUMBER:
-		type = 
+	# case FORM_NUMBER: 
+	# 	type = 
 	}
 	$str = "
 	<label></label><br>
