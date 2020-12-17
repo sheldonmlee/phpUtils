@@ -7,6 +7,9 @@
 // Forms
 //
 
+const METHOD_GET = 1;
+const METHOD_POST = 2;
+
 const INPUT_BUTTON = 1;
 const INPUT_CHECKBOX = 2;
 const INPUT_COLOR = 3;
@@ -30,31 +33,35 @@ const INPUT_TIME = 20;
 const INPUT_URL = 21;
 const INPUT_WEEK = 22;
 
+function defaultNull($arr, $key) { return isset($arr[$key])? $arr[$key] : null; }
+function defaultEmpty($arr, $key) { return isset($arr[$key])? $arr[$key] : ""; }
 
-function generateInput($type)
+function generateInput($arr)
 {
-	switch ($type) { 
-	# case FORM_NUMBER: 
-	# 	type = 
+	switch ($arr[0]) { 
+		
 	}
 	$str = "
 	<label></label><br>
-	"
+	";
 }
 
 function generateSelect($name, $options, $default)
 {
 	foreach ($options as $option) {
-		
+	
 	}
 }
 
 function generateForm($form)
 {
-	foreach ($array as $entry) {
-		switch ($entry["type"]) {
-			case 
-		}
+	$method = defaultNull($form, "method");
+	if (!$method) return;
+	$target = defaultNull($form, "target");
+	 
+	foreach ($form as $key => $value) {
+		if (gettype($key) != "int") continue;
+		generateInput($value);
 	}
 }
 
