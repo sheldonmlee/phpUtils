@@ -3,66 +3,126 @@
 // HTML generation
 //
 
+
 //
 // Forms
 //
 
-const METHOD_GET = 1;
-const METHOD_POST = 2;
-
-const INPUT_BUTTON = 1;
-const INPUT_CHECKBOX = 2;
-const INPUT_COLOR = 3;
-const INPUT_DATE = 4;
-const INPUT_DATETIME_LOCAL = 5;
-const INPUT_EMAIL = 6;
-const INPUT_FILE = 7;
-const INPUT_HIDDEN = 8;
-const INPUT_IMAGE = 9;
-const INPUT_MONTH = 10;
-const INPUT_NUMBER = 11;
-const INPUT_PASSWORD = 12;
-const INPUT_RADIO = 13;
-const INPUT_RANGE = 14;
-const INPUT_RESET = 15;
-const INPUT_SEARCH = 16;
-const INPUT_SUBMIT = 17;
-const INPUT_TEL = 18;
-const INPUT_TEXT = 19;
-const INPUT_TIME = 20;
-const INPUT_URL = 21;
-const INPUT_WEEK = 22;
-
 function defaultNull($arr, $key) { return isset($arr[$key])? $arr[$key] : null; }
 function defaultEmpty($arr, $key) { return isset($arr[$key])? $arr[$key] : ""; }
 
-function generateInput($arr)
-{
-	switch ($arr[0]) { 
-		
-	}
-	$str = "
-	<label></label><br>
-	";
+abstract class Method {
+	const GET = "get";
+	const POST = "post";
 }
 
-function generateSelect($name, $options, $default)
+// encapsulates constants used as inputs
+abstract class Input 
 {
-	foreach ($options as $option) {
-	
+	const BUTTON			= "button";
+	const CHECKBOX			= "checkbox";
+	const COLOR				= "color";
+	const DATE				= "date";
+	const DATETIME_LOCAL	= "datetime-local";
+	const EMAIL				= "email";
+	const FILE				= "file";
+	const HIDDEN			= "hidden";
+	const IMAGE				= "image";
+	const MONTH				= "month";
+	const NUMBER			= "number";
+	const PASSWORD			= "password";
+	const RADIO				= "radio";
+	const RANGE				= "range";
+	const RESET				= "reset";
+	const SEARCH			= "search";
+	const SUBMIT			= "submit";
+	const TEL				= "tel";
+	const TEXT				= "text";
+	const TIME				= "time";
+	const URL				= "url";
+	const WEEK				= "week";
+
+	const SELECT 			= "select";
+
+	// returns array of constants
+	private static function getConstants()
+	{
+		$reflect = new ReflectionClass(get_called_class());
+		return $reflect->getConstants();
+	}
+
+	// check if constant exists
+	static function exists($name)
+	{
+		return in_array($name, self::getConstants());
 	}
 }
 
+
+// Takes an array() as input. Works for html <input>.
+function generateInput($input)
+{
+	$type = defaultNull($input, "type");
+
+	// lambdas to generate <input> or <select> elements.
+	// all lambdas inerit $input
+	$generateInputSelect = function() use($input)
+	{
+		return "";
+	};
+
+	$generateInputGeneral = function() use ($input, $type)
+	{
+		$name = defaultNull($input, "name");
+		$id = defaultNull($input, "id");
+		$label = defaultEmpty($input, "label");
+		$value = defaultEmpty($input, "value");
+		$readonly = in_array("readonly", $input)? "readonly" : "";
+
+		if ($id == null) $id = $name;
+
+		$str = "<label for=\"$id\">$label</label><br>\n<input type=\"$type\" name=\"$name\" id=\"$id\" value=\"$value\" $readonly><br>\n";
+		return $str;
+	};
+
+	$generateInputSubmit = function() use ($input)
+	{
+		$value = defaultNull($input, "value");
+		if ($value == null) $value = "Submit"; 
+		return "<input type=\"submit\" value=\"$value\">\n";
+	};
+
+	// main logic
+	switch ($type) {
+	case null: 
+		return;
+	case Input::SELECT:
+		return $generateInputSelect();
+		break;
+	case Input::SUBMIT:
+		return $generateInputSubmit();
+		break;
+	default:
+		return $generateInputGeneral();
+	}
+}
+
+// Takes an array() and returns an html string.
+// For structure, refer to etc/example_form.php.
 function generateForm($form)
 {
 	$method = defaultNull($form, "method");
-	if (!$method) return;
-	$target = defaultNull($form, "target");
-	 
-	foreach ($form as $key => $value) {
-		if (gettype($key) != "int") continue;
-		generateInput($value);
+	$target = defaultEmpty($form, "target");
+	$inputs = defaultNull($form, "inputs");
+	if ($method == null) return;
+
+	$output = "<form method=\"$method\" target=\"$target\">\n";
+	foreach ($inputs as $input) {
+		$output .= generateInput($input);
 	}
+	$output .= "</form>";
+
+	return $output;
 }
 
 // Generates <select> html list
