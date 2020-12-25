@@ -4,7 +4,7 @@ require_once("utils.php");
 // example of how to generate form.
 $form = array( 
 	"method" => Method::GET,
-	"target" => "test.php",
+	"action" => "test.php",
 	"inputs" => array(
 		array("type" => Input::TEXT, "label" => "First name:", "name" => "first_name"),
 		array("type" => Input::TEXT, "label" => "Last name:", "name" => "last_name"),

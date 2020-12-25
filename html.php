@@ -10,6 +10,7 @@
 
 function defaultNull($arr, $key) { return isset($arr[$key])? $arr[$key] : null; }
 function defaultEmpty($arr, $key) { return isset($arr[$key])? $arr[$key] : ""; }
+function defaultString($arr, $key, $default) { return isset($arr[$key])? $arr[$key] : $default; }
 
 abstract class Method {
 	const GET = "get";
@@ -111,14 +112,16 @@ function generateInput($input)
 // For structure, refer to etc/example_form.php.
 function generateForm($form)
 {
-	$method = defaultNull($form, "method");
+	$action = defaultEmpty($form, "action");
+	$method = defaultEmpty($form, "method");
 	$target = defaultEmpty($form, "target");
 	$inputs = defaultNull($form, "inputs");
-	if ($method == null) return;
 
-	$output = "<form method=\"$method\" target=\"$target\">\n";
-	foreach ($inputs as $input) {
-		$output .= generateInput($input);
+	$output = "<form action=\"$action\" method=\"$method\" target=\"$target\">\n";
+	if ($inputs != null) {
+		foreach ($inputs as $input) {
+			$output .= generateInput($input);
+		}
 	}
 	$output .= "</form>";
 
