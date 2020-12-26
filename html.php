@@ -3,22 +3,20 @@
 // HTML generation
 //
 
+require_once("misc.php");
 
 //
 // Forms
 //
 
-function defaultNull($arr, $key) { return isset($arr[$key])? $arr[$key] : null; }
-function defaultEmpty($arr, $key) { return isset($arr[$key])? $arr[$key] : ""; }
-function defaultString($arr, $key, $default) { return isset($arr[$key])? $arr[$key] : $default; }
-
-abstract class Method {
+abstract class Method extends Enum
+{
 	const GET = "get";
 	const POST = "post";
 }
 
 // encapsulates constants used as inputs
-abstract class Input 
+abstract class Input extends Enum
 {
 	const BUTTON			= "button";
 	const CHECKBOX			= "checkbox";
@@ -45,18 +43,35 @@ abstract class Input
 
 	const SELECT 			= "select";
 
-	// returns array of constants
-	private static function getConstants()
-	{
-		$reflect = new ReflectionClass(get_called_class());
-		return $reflect->getConstants();
-	}
+}
 
-	// check if constant exists
-	static function exists($name)
-	{
-		return in_array($name, self::getConstants());
+abstract class Select Extends Enum
+{
+	const NORMAL = 1;
+	const FROM_TABLE = 2;
+}
+
+// Takes an array() and returns an html string.
+// For structure, refer to etc/example_form.php.
+function generateForm($form)
+{
+	$action = defaultEmpty($form, "action");
+	$method = defaultEmpty($form, "method");
+	$target = defaultEmpty($form, "target");
+	$inputs = defaultNull($form, "inputs");
+
+	$output = "<form action=\"$action\" method=\"$method\" target=\"$target\">\n";
+	if ($inputs != null) {
+		foreach ($inputs as $input) {
+			$type = defaultNull($input, "type");
+			if (Input::exists($type)) $output .= generateInput($input);
+			else if ($type == Select::NORMAL) $output.= generateSelect($input);
+			else if ($type == Select::FROM_TABLE) $output.= generateSelectFromTable($input);
+		}
 	}
+	$output .= "</form>\n";
+
+	return $output;
 }
 
 
@@ -64,23 +79,17 @@ abstract class Input
 function generateInput($input)
 {
 	$type = defaultNull($input, "type");
+	if (!Input::Exists($type)) return;
 
 	// lambdas to generate <input> or <select> elements.
 	// all lambdas inerit $input
-	$generateInputSelect = function() use($input)
-	{
-		return "";
-	};
-
 	$generateInputGeneral = function() use ($input, $type)
 	{
 		$name = defaultNull($input, "name");
-		$id = defaultNull($input, "id");
+		$id = defaultString($input, "id", $name);
 		$label = defaultEmpty($input, "label");
 		$value = defaultEmpty($input, "value");
 		$readonly = in_array("readonly", $input)? "readonly" : "";
-
-		if ($id == null) $id = $name;
 
 		$str = "<label for=\"$id\">$label</label><br>\n<input type=\"$type\" name=\"$name\" id=\"$id\" value=\"$value\" $readonly><br>\n";
 		return $str;
@@ -97,9 +106,6 @@ function generateInput($input)
 	switch ($type) {
 	case null: 
 		return;
-	case Input::SELECT:
-		return $generateInputSelect();
-		break;
 	case Input::SUBMIT:
 		return $generateInputSubmit();
 		break;
@@ -108,45 +114,61 @@ function generateInput($input)
 	}
 }
 
-// Takes an array() and returns an html string.
-// For structure, refer to etc/example_form.php.
-function generateForm($form)
+// Generates <select> html list
+function generateSelect($select)
 {
-	$action = defaultEmpty($form, "action");
-	$method = defaultEmpty($form, "method");
-	$target = defaultEmpty($form, "target");
-	$inputs = defaultNull($form, "inputs");
+	$name = defaultNull($select, "name");
+	$id = defaultString($select, "id", $name);
+	$label = defaultEmpty($select, "label");
+	$options = defaultNull($select, "options");
+	$default_value = defaultNull($select, "default_value");
 
-	$output = "<form action=\"$action\" method=\"$method\" target=\"$target\">\n";
-	if ($inputs != null) {
-		foreach ($inputs as $input) {
-			$output .= generateInput($input);
-		}
+	$output = "<label for=\"$id\">$label</label><br>\n";
+	$output .= "<select name=\"$name\" id=\"$id\">\n";
+	if ($options == null) return;
+	foreach($options as $option) {
+		$value = defaultNull($option, 0);
+		if ($value == null) continue;
+		$label = defaultString($option, 1, $value);
+
+		// apply selected attribute if $value matches $default_value
+		$selected = ($default_value == $value)? "selected" : "";
+		$output .= "<option value=\"$value\" $selected>$label</option>\n";
 	}
-	$output .= "</form>";
-
+	$output .= "</select><br>\n";
 	return $output;
 }
 
-// Generates <select> html list
+// Generates <select> html list from table
 // usage: generateSelect(<connection instance>, string: <id field>, string: <display field>, string: <default option>, boolean: <is required>);
 // $default matches with $v_field
-function generateSelectFromTable(&$connection, $t_name, $id_field, $d_field, $default=null)
+function generateSelectFromTable($select)
 {
+	$connection = defaultNull($select, "connection");
+	$table = defaultNull($select, "table");
+	$id_field = defaultNull($select, "id_field");
+	$display_field = defaultNull($select, "display_field");
+	//if ($connection == null or $table == null or $id_field == null or $display_field == null) return;
+
+	$label = defaultEmpty($select, "label");
+	$default_id = defaultNull($select, "default_id");
+
 	$queryResult = $connection->query("
-		SELECT $id_field, $d_field FROM $t_name
+		SELECT $id_field, $display_field FROM $table
 		ORDER BY $id_field;
 	");
 
-	echo "<select name='$id_field'>";
+	$options = array();
 	foreach ($queryResult as $row) {
-		$selected="";
-		if ($default == $row[$id_field] && $default != null) {
-			$selected = "selected";
-		}
-		echo "<option value='{$row[$id_field]}'$selected>{$row[$d_field]}</option>";
+		$options[] = array($row[$id_field], $row[$display_field]);
 	}
-	echo "</select>";
+
+	return generateSelect(array(
+		"name" => $id_field,
+		"label" => $label,
+		"options" => $options,
+		"default_value" => $default_id
+	));
 }
 
 ?>
