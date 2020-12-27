@@ -148,7 +148,7 @@ function generateSelectFromTable($select)
 	$table = defaultNull($select, "table");
 	$id_field = defaultNull($select, "id_field");
 	$display_field = defaultNull($select, "display_field");
-	//if ($connection == null or $table == null or $id_field == null or $display_field == null) return;
+	if ($connection == null or $table == null or $id_field == null or $display_field == null) return;
 
 	$label = defaultEmpty($select, "label");
 	$default_id = defaultNull($select, "default_id");
