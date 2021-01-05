@@ -8,14 +8,22 @@ require_once("misc.php");
 //
 // Forms
 //
+// For example usage, refer to etc/form_example.php
 
+// encapsulates constants used for form input types and get/post methods.
+// 
 abstract class Method extends Enum
 {
 	const GET = "get";
 	const POST = "post";
 }
 
-// encapsulates constants used as inputs
+abstract class Select Extends Enum
+{
+	const NORMAL = 1;
+	const FROM_TABLE = 2;
+}
+
 abstract class Input extends Enum
 {
 	const BUTTON			= "button";
@@ -40,15 +48,6 @@ abstract class Input extends Enum
 	const TIME				= "time";
 	const URL				= "url";
 	const WEEK				= "week";
-
-	const SELECT 			= "select";
-
-}
-
-abstract class Select Extends Enum
-{
-	const NORMAL = 1;
-	const FROM_TABLE = 2;
 }
 
 // Takes an array() and returns an html string.
@@ -57,10 +56,9 @@ function generateForm($form)
 {
 	$action = defaultEmpty($form, "action");
 	$method = defaultEmpty($form, "method");
-	$target = defaultEmpty($form, "target");
 	$inputs = defaultNull($form, "inputs");
 
-	$output = "<form action=\"$action\" method=\"$method\" target=\"$target\">\n";
+	$output = "<form action=\"$action\" method=\"$method\">\n";
 	if ($inputs != null) {
 		foreach ($inputs as $input) {
 			$type = defaultNull($input, "type");
@@ -140,8 +138,6 @@ function generateSelect($select)
 }
 
 // Generates <select> html list from table
-// usage: generateSelect(<connection instance>, string: <id field>, string: <display field>, string: <default option>, boolean: <is required>);
-// $default matches with $v_field
 function generateSelectFromTable($select)
 {
 	$connection = defaultNull($select, "connection");

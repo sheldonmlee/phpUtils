@@ -1,10 +1,11 @@
 <?php
+
 function initSession()
 {
-	if (session_status() != PHP_SESSION_NONE) return;
+	if (session_status() != PHP_SESSION_NONE) return ;
 
 	isset($_SERVER["DOCUMENT_ROOT"])? $home = $_SERVER["DOCUMENT_ROOT"] : $home = null; 
-	if (!$home) exit();
+	if (!$home) return;
 	$session_dir = $home."/../sessionData";
 
 	ini_set("session.save_path", $session_dir);
